@@ -1,0 +1,24 @@
+name: Jalankan Bot Forex Otomatis
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Ini kode agar bot berjalan setiap jam (menit ke-0)
+  workflow_dispatch: # Ini memunculkan tombol agar Anda bisa klik "Run" secara manual
+
+jobs:
+  jalankan-bot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ambil File Kode
+        uses: actions/checkout@v3
+
+      - name: Siapkan Mesin Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Instal Pustaka (Library)
+        run: pip install -r requirements.txt
+
+      - name: Mulai Pantau Harga!
+        run: python bot_forex.py
