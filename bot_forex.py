@@ -31,27 +31,29 @@ def analyze_and_alert():
     # UNTUK TESTING SAAT INI AGAR NOTIFIKASI PASTI MASUK, HAPUS TANDA '#' DI BAWAH INI:
     # is_golden_cross = True
 
-    if is_golden_cross or is_death_cross:
-        plt.figure(figsize=(10, 5))
-        plt.plot(data.index, data['Close'], label='Harga EUR/USD', color='black')
-        plt.plot(data.index, data['SMA_20'], label='SMA 20', color='blue')
-        plt.plot(data.index, data['SMA_50'], label='SMA 50', color='red')
-        plt.title('Peringatan Sinyal EUR/USD')
-        plt.legend()
-        plt.grid(True)
-        chart_filename = 'sinyal_chart.png'
-        plt.savefig(chart_filename)
-        plt.close()
-
+          # Menyusun pesan teks yang edukatif
         if is_golden_cross:
-            pesan = f"🟢 **SINYAL BUY EUR/USD** 🟢\nSMA 20 memotong ke atas SMA 50!\nHarga saat ini: {last_row['Close']:.4f}"
+            pesan = (
+                f"🟢 **INSTRUKSI: BUY (BELI)** 🟢\n"
+                f"Harga EUR/USD: {last_row['Close']:.4f}\n\n"
+                f"🧠 **Kenapa harus BUY?**\n"
+                f"Coba lihat grafik di atas. Garis Biru (rata-rata pergerakan harga 20 jam terakhir) baru saja menembus ke ATAS Garis Merah (rata-rata 50 jam).\n\n"
+                f"📚 **Pelajaran Teknikal:**\n"
+                f"Kondisi ini disebut 'Golden Cross'. Ini artinya momentum pembeli (buyer) dalam jangka pendek sedang sangat kuat dan mendominasi. Secara statistik, saat garis biru berada di atas merah, tren harga akan cenderung terus NAIK.\n\n"
+                f"💡 **Saran Trading:**\n"
+                f"Silakan buka posisi BUY. Namun, market bisa berbalik arah kapan saja karena berita ekonomi tak terduga. Jadi, JANGAN LUPA pasang Stop Loss (Batas Kerugian) di bawah harga saat ini!"
+            )
         else:
-            pesan = f"🔴 **SINYAL SELL EUR/USD** 🔴\nSMA 20 memotong ke bawah SMA 50!\nHarga saat ini: {last_row['Close']:.4f}"
+            pesan = (
+                f"🔴 **INSTRUKSI: SELL (JUAL)** 🔴\n"
+                f"Harga EUR/USD: {last_row['Close']:.4f}\n\n"
+                f"🧠 **Kenapa harus SELL?**\n"
+                f"Coba lihat grafik di atas. Garis Biru (rata-rata pergerakan harga 20 jam terakhir) baru saja menukik ke BAWAH Garis Merah (rata-rata 50 jam).\n\n"
+                f"📚 **Pelajaran Teknikal:**\n"
+                f"Kondisi ini disebut 'Death Cross'. Ini artinya momentum penjual (seller) sedang menguasai pasar. Harga jangka pendek merosot lebih cepat dibanding harga jangka menengah, sehingga tren diperkirakan akan terus TURUN.\n\n"
+                f"💡 **Saran Trading:**\n"
+                f"Silakan buka posisi SELL. JANGAN LUPA pasang Stop Loss (Batas Kerugian) di atas harga saat ini untuk mencegah kerugian jika tiba-tiba tren berbalik arah."
+            )
 
         send_telegram_photo(chart_filename, pesan)
-        print("Sinyal berhasil dikirim!")
-    else:
-        print("Belum ada sinyal.")
-
-if __name__ == "__main__":
     analyze_and_alert()
