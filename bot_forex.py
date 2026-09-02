@@ -9,7 +9,7 @@ import os
 # --- PENGATURAN ---
 TELEGRAM_TOKEN = '8227215075:AAGFrgKdUE1LeijOPdnRSyZSv-T1mRj0Rxo'
 TELEGRAM_CHAT_ID = '8824675734'
-GEMINI_API_KEY = 'KUNCI_AIZA_ANDA_YANG_BARU'
+GEMINI_API_KEY = 'AQ.Ab8RN6LkKAAKrXRoVq1rjfKHF7UMeiuqyK9CjxSYE35LdyW2eQ'
 
 def send_telegram_split(photo_path, header, analisa):
     print("Mengirim Foto ke Telegram...")
