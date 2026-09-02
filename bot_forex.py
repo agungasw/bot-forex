@@ -1,4 +1,3 @@
-
 import yfinance as yf
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -47,7 +46,8 @@ try:
     with open(chart_filename, "rb") as image_file:
         encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
     
-    url_gemini = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={GEMINI_API_KEY}"
+    # PERUBAHAN JALUR VVIP UNTUK KUNCI 'AQ.' ADA DI SINI
+    url_gemini = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
     payload = {
         "contents": [{
             "parts": [
@@ -56,7 +56,10 @@ try:
             ]
         }]
     }
-    headers = {'Content-Type': 'application/json'}
+    headers = {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': GEMINI_API_KEY
+    }
     response = requests.post(url_gemini, headers=headers, json=payload)
     
     if response.status_code == 200:
@@ -78,8 +81,8 @@ with open(chart_filename, 'rb') as photo:
 
 print("Mengirim Teks Analisa...")
 url_msg = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-pesan_teks = f"Analisa AI:\n{analisa_ai}"
-res2 = requests.post(url_msg, data={'chat_id': TELEGRAM_CHAT_ID, 'text': pesan_teks})
+pesan_teks = f"**Analisa AI:**\n{analisa_ai}"
+res2 = requests.post(url_msg, data={'chat_id': TELEGRAM_CHAT_ID, 'text': pesan_teks, 'parse_mode': 'Markdown'})
 print("Status Teks:", res2.text)
 
 print("Selesai total!")
