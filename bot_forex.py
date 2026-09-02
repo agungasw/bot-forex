@@ -39,7 +39,7 @@ if is_golden_cross: jenis_sinyal = "🔥 POTENSI BUY (Golden Cross) 🔥"
 elif is_death_cross: jenis_sinyal = "❄️ POTENSI SELL (Death Cross) ❄️"
 
 harga = last_row['Close']
-prompt = f"Status EUR/USD: {jenis_sinyal} di {harga:.4f}. Beri analisa ringkas."
+prompt = f"Status EUR/USD: {jenis_sinyal} di {harga:.4f}. Beri analisa ringkas tentang tren pergerakannya."
 
 print("Meminta Analisa ke Mesin Google...")
 try:
