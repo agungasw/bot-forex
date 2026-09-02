@@ -10,7 +10,7 @@ import os
 # --- PENGATURAN ---
 TELEGRAM_TOKEN = '8227215075:AAGFrgKdUE1LeijOPdnRSyZSv-T1mRj0Rxo'
 TELEGRAM_CHAT_ID = '8824675734'
-GEMINI_API_KEY = 'AQ.Ab8RN6IZDPqbh35JaLcl5Vs8Cdvq-CvNx6A8cMNPz2_XQ-aI5Q'
+GEMINI_API_KEY = 'AQ.Ab8RN6IihqaRR7jFrDIC3lUiRW1aF1vkjJVQG7mdKVX5EcwSxw'
 
 print("1. Memulai program...")
 client = genai.Client(api_key=GEMINI_API_KEY)
