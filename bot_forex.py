@@ -6,9 +6,9 @@ import base64
 from datetime import datetime, timedelta, timezone
 import os
 
-# --- PENGATURAN ---
 TELEGRAM_TOKEN = '8227215075:AAGFrgKdUE1LeijOPdnRSyZSv-T1mRj0Rxo'
 TELEGRAM_CHAT_ID = '8824675734'
+# Kunci terbaru dari Project aiAgent-v1 yang Anda buat
 GEMINI_API_KEY = 'AQ.Ab8RN6LkKAAKrXRoVq1rjfKHF7UMeiuqyK9CjxSYE35LdyW2eQ'
 
 def send_telegram_split(photo_path, header, analisa):
@@ -21,7 +21,6 @@ def send_telegram_split(photo_path, header, analisa):
     print("Mengirim Teks Analisa...")
     url_msg = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
     pesan_teks = f"Analisa AI:\n{analisa}"
-    # Hapus parse_mode agar tidak error jika ada simbol aneh dari AI
     res2 = requests.post(url_msg, data={'chat_id': TELEGRAM_CHAT_ID, 'text': pesan_teks})
     print("Status Teks:", res2.text)
 
@@ -87,7 +86,7 @@ def analyze_and_alert():
     
     send_telegram_split(chart_filename, header, analisa_ai)
     print("Selesai total!")
-    
+
 if __name__ == "__main__":
     analyze_and_alert()
     
