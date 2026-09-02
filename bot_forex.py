@@ -88,5 +88,6 @@ def analyze_and_alert():
     send_telegram_split(chart_filename, header, analisa_ai)
     print("Selesai total!")
 
-if __name__ == "__main__":
+    if __name__ == "__main__":
     analyze_and_alert()
+    
