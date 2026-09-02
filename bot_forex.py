@@ -13,12 +13,16 @@ GEMINI_API_KEY = 'AQ.Ab8RN6IZDPqbh35JaLcl5Vs8Cdvq-CvNx6A8cMNPz2_XQ-aI5Q'
 
 client = genai.Client(api_key=GEMINI_API_KEY)
 
-def send_telegram_photo(photo_path, caption):
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
+def send_telegram_split(photo_path, header, analisa):
+    # 1. Kirim Foto + Header Pendek (Aman dari limit)
+    url_photo = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
     with open(photo_path, 'rb') as photo:
-        payload = {'chat_id': TELEGRAM_CHAT_ID, 'caption': caption}
-        files = {'photo': photo}
-        requests.post(url, data=payload, files=files)
+        requests.post(url_photo, data={'chat_id': TELEGRAM_CHAT_ID, 'caption': header}, files={'photo': photo})
+    
+    # 2. Kirim Analisa AI Panjang sebagai teks biasa
+    url_msg = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+    pesan_teks = f"**Analisa AI:**\n{analisa}"
+    requests.post(url_msg, data={'chat_id': TELEGRAM_CHAT_ID, 'text': pesan_teks, 'parse_mode': 'Markdown'})
 
 def analyze_and_alert():
     data = yf.Ticker('EURUSD=X').history(period='5d', interval='1h')
@@ -33,7 +37,6 @@ def analyze_and_alert():
     is_golden_cross = (prev_row['SMA_20'] < prev_row['SMA_50']) and (last_row['SMA_20'] > last_row['SMA_50'])
     is_death_cross = (prev_row['SMA_20'] > prev_row['SMA_50']) and (last_row['SMA_20'] < last_row['SMA_50'])
 
-    # 1. BUAT GRAFIK TANPA SYARAT (Tiap jam buat grafik)
     plt.figure(figsize=(10, 5))
     plt.plot(data.index, data['Close'], label='Harga EUR/USD', color='black', linewidth=2)
     plt.plot(data.index, data['SMA_20'], label='SMA 20 (Biru)', color='blue', linestyle='--')
@@ -45,7 +48,6 @@ def analyze_and_alert():
     plt.savefig(chart_filename, dpi=300, bbox_inches='tight')
     plt.close()
 
-    # 2. TENTUKAN STATUS PASAR SEKARANG
     if is_golden_cross:
         jenis_sinyal = "🔥 POTENSI BUY (Golden Cross) 🔥"
     elif is_death_cross:
@@ -58,34 +60,27 @@ def analyze_and_alert():
 
     harga = last_row['Close']
     
-    # 3. PROMPT UNTUK GEMINI
     prompt = f"""
     Kamu adalah analis forex profesional. 
     Saat ini status pasar EUR/USD adalah: {jenis_sinyal} di harga {harga:.4f}.
     Tolong lihat gambar grafik terlampir (Garis biru: SMA 20, merah: SMA 50).
-    Berikan laporan ringkas (maksimal 2 paragraf) mengenai tren saat ini, apakah ada potensi perubahan arah dalam beberapa jam ke depan, dan saran langkah untuk trader.
+    Berikan laporan ringkas mengenai tren saat ini, apakah ada potensi perubahan arah, dan saran langkah untuk trader.
     Jangan gunakan teks tebal berlebihan.
     """
     
     try:
         img = Image.open(chart_filename)
-        response = client.models.generate_content(
-            model='gemini-3.6-flash',
-            contents=[prompt, img]
-        )
+        response = client.models.generate_content(model='gemini-3.6-flash', contents=[prompt, img])
         analisa_ai = response.text
     except Exception as e:
         analisa_ai = f"AI Gemini sedang sibuk. Error: {e}"
 
-    # 4. SUSUN PESAN DENGAN WAKTU WIB
     tz = timezone(timedelta(hours=7)) 
     waktu_sekarang = datetime.now(tz).strftime('%Y-%m-%d %H:%M')
 
-    pesan_final = f"🤖 **Laporan Rutin 1 Jam** 🤖\n⏰ Waktu: {waktu_sekarang} WIB\n💰 Harga: {harga:.4f}\n🚦 Status: {jenis_sinyal}\n\n**Analisa AI:**\n{analisa_ai}"
-
-    send_telegram_photo(chart_filename, pesan_final)
+    header = f"🤖 **Laporan Rutin 1 Jam** 🤖\n⏰ Waktu: {waktu_sekarang} WIB\n💰 Harga: {harga:.4f}\n🚦 Status: {jenis_sinyal}"
+    
+    send_telegram_split(chart_filename, header, analisa_ai)
 
 if __name__ == "__main__":
     analyze_and_alert()
-    
-    
