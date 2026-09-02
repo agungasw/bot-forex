@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, timezone
 import os
 
 # --- PENGATURAN ---
-TELEGRAM_TOKEN = 'TOKEN_TELEGRAM_BARU_ANDA'
+TELEGRAM_TOKEN = '8227215075:AAGFrgKdUE1LeijOPdnRSyZSv-T1mRj0Rxo'
 TELEGRAM_CHAT_ID = '8824675734'
 GEMINI_API_KEY = 'KUNCI_AQ_ANDA_YANG_BARU'
 
@@ -51,7 +51,6 @@ def analyze_and_alert():
     harga = last_row['Close']
     prompt = f"Status EUR/USD: {jenis_sinyal} di {harga:.4f}. Beri analisa ringkas."
     
-    # METODE DIRECT API GEMINI (ANTI ERROR KUNCI AQ)
     try:
         with open(chart_filename, "rb") as image_file:
             encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
