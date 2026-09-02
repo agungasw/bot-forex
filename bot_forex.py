@@ -84,3 +84,4 @@ def analyze_and_alert():
 
 if __name__ == "__main__":
     analyze_and_alert()
+    
