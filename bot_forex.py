@@ -9,18 +9,24 @@ import os
 # --- PENGATURAN ---
 TELEGRAM_TOKEN = '8227215075:AAGFrgKdUE1LeijOPdnRSyZSv-T1mRj0Rxo'
 TELEGRAM_CHAT_ID = '8824675734'
-GEMINI_API_KEY = 'KUNCI_AQ_ANDA_YANG_BARU'
+GEMINI_API_KEY = 'KUNCI_AIZA_ANDA_YANG_BARU'
 
 def send_telegram_split(photo_path, header, analisa):
+    print("Mengirim Foto ke Telegram...")
     url_photo = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
     with open(photo_path, 'rb') as photo:
-        requests.post(url_photo, data={'chat_id': TELEGRAM_CHAT_ID, 'caption': header}, files={'photo': photo})
+        res1 = requests.post(url_photo, data={'chat_id': TELEGRAM_CHAT_ID, 'caption': header}, files={'photo': photo})
+        print("Status Foto:", res1.text)
     
+    print("Mengirim Teks Analisa...")
     url_msg = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    pesan_teks = f"**Analisa AI:**\n{analisa}"
-    requests.post(url_msg, data={'chat_id': TELEGRAM_CHAT_ID, 'text': pesan_teks, 'parse_mode': 'Markdown'})
+    pesan_teks = f"Analisa AI:\n{analisa}"
+    # Hapus parse_mode agar tidak error jika ada simbol aneh dari AI
+    res2 = requests.post(url_msg, data={'chat_id': TELEGRAM_CHAT_ID, 'text': pesan_teks})
+    print("Status Teks:", res2.text)
 
 def analyze_and_alert():
+    print("Mulai mengambil data Yahoo...")
     data = yf.Ticker('EURUSD=X').history(period='5d', interval='1h')
     data.index = data.index.tz_localize(None)
 
@@ -51,6 +57,7 @@ def analyze_and_alert():
     harga = last_row['Close']
     prompt = f"Status EUR/USD: {jenis_sinyal} di {harga:.4f}. Beri analisa ringkas."
     
+    print("Meminta Analisa ke Mesin Google...")
     try:
         with open(chart_filename, "rb") as image_file:
             encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
@@ -79,7 +86,7 @@ def analyze_and_alert():
     header = f"🤖 **Laporan Otomatis GitHub** 🤖\n⏰ Waktu: {waktu_sekarang} WIB\n💰 Harga: {harga:.4f}\n🚦 Status: {jenis_sinyal}"
     
     send_telegram_split(chart_filename, header, analisa_ai)
+    print("Selesai total!")
 
 if __name__ == "__main__":
     analyze_and_alert()
-    
