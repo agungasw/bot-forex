@@ -8,7 +8,6 @@ import os
 
 TELEGRAM_TOKEN = '8227215075:AAGFrgKdUE1LeijOPdnRSyZSv-T1mRj0Rxo'
 TELEGRAM_CHAT_ID = '8824675734'
-# Kunci baru Anda sudah saya pasangkan di sini
 GEMINI_API_KEY = 'AQ.Ab8RN6IIh_Zp5MJebYXDEAWkSihwgAmCjFMumk0I1gDYC4jABg'
 
 print("Mulai mengambil data Yahoo...")
@@ -40,14 +39,14 @@ if is_golden_cross: jenis_sinyal = "🔥 POTENSI BUY (Golden Cross) 🔥"
 elif is_death_cross: jenis_sinyal = "❄️ POTENSI SELL (Death Cross) ❄️"
 
 harga = last_row['Close']
-prompt = f"Status EUR/USD: {jenis_sinyal} di {harga:.4f}. Tolong beri analisa ringkas tentang tren pergerakannya."
+prompt = f"Status EUR/USD: {jenis_sinyal} di {harga:.4f}. Tolong beri analisa ringkas maksimal 3 kalimat tentang tren pergerakannya."
 
 print("Meminta Analisa ke Mesin Google...")
 try:
     with open(chart_filename, "rb") as image_file:
         encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
     
-    # UPGRADE MESIN AI KE VERSI TERBARU (3.6-flash)
+    # UPGRADE MESIN AI KE VERSI TERBARU (3.6-flash) AGAR TIDAK ERROR
     url_gemini = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent"
     payload = {
         "contents": [{
@@ -78,12 +77,15 @@ print("Mengirim Foto ke Telegram...")
 url_photo = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
 with open(chart_filename, 'rb') as photo:
     res1 = requests.post(url_photo, data={'chat_id': TELEGRAM_CHAT_ID, 'caption': header}, files={'photo': photo})
-    print("Status Foto:", res1.text)
 
 print("Mengirim Teks Analisa...")
 url_msg = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-pesan_teks = f"**Analisa AI:**\n{analisa_ai}"
-res2 = requests.post(url_msg, data={'chat_id': TELEGRAM_CHAT_ID, 'text': pesan_teks, 'parse_mode': 'Markdown'})
-print("Status Teks:", res2.text)
+
+# Mengamankan teks agar Telegram tidak error jika kepanjangan
+if len(analisa_ai) > 3500:
+    analisa_ai = analisa_ai[:3500] + "\n... (Teks dipotong)"
+    
+pesan_teks = f"Analisa AI:\n{analisa_ai}"
+res2 = requests.post(url_msg, data={'chat_id': TELEGRAM_CHAT_ID, 'text': pesan_teks})
 
 print("Selesai total!")
