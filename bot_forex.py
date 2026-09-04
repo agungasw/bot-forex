@@ -39,14 +39,17 @@ if is_golden_cross: jenis_sinyal = "🔥 POTENSI BUY (Golden Cross) 🔥"
 elif is_death_cross: jenis_sinyal = "❄️ POTENSI SELL (Death Cross) ❄️"
 
 harga = last_row['Close']
-prompt = f"Status EUR/USD: {jenis_sinyal} di {harga:.4f}. Tolong beri analisa ringkas maksimal 3 kalimat tentang tren pergerakannya."
+support_terdekat = data['Low'].min()
+resisten_terdekat = data['High'].max()
+
+# Prompt canggih yang menyuruh AI menjelaskan Support & Resistance
+prompt = f"Status EUR/USD: {jenis_sinyal} di {harga:.4f}. Harga Support terdekat adalah {support_terdekat:.4f} dan Resistance terdekat adalah {resisten_terdekat:.4f}. Tolong beri analisa ringkas maksimal 4 kalimat tentang tren pergerakannya, dan sebutkan level Support serta Resistance tersebut agar saya tahu batas risikonya."
 
 print("Meminta Analisa ke Mesin Google...")
 try:
     with open(chart_filename, "rb") as image_file:
         encoded_image = base64.b64encode(image_file.read()).decode('utf-8')
     
-    # UPGRADE MESIN AI KE VERSI TERBARU (3.6-flash) AGAR TIDAK ERROR
     url_gemini = "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent"
     payload = {
         "contents": [{
@@ -81,7 +84,6 @@ with open(chart_filename, 'rb') as photo:
 print("Mengirim Teks Analisa...")
 url_msg = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 
-# Mengamankan teks agar Telegram tidak error jika kepanjangan
 if len(analisa_ai) > 3500:
     analisa_ai = analisa_ai[:3500] + "\n... (Teks dipotong)"
     
