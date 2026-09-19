@@ -2,5 +2,6 @@ yfinance
 pandas
 matplotlib
 requests
+mplfinance
 google-genai
 pillow
