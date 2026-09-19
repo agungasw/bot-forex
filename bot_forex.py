@@ -26,7 +26,14 @@ def calculate_atr(data, window=14):
 
 pairs = {'EUR/USD': 'EURUSD=X', 'EMAS (XAU/USD)': 'GC=F'}
 tz = timezone(timedelta(hours=7)) 
-waktu_sekarang = datetime.now(tz).strftime('%Y-%m-%d %H:%M')
+waktu_sekarang_dt = datetime.now(tz)
+waktu_sekarang = waktu_sekarang_dt.strftime('%Y-%m-%d %H:%M')
+
+# Deteksi Hari Libur Pasar (Sabtu/Minggu)
+hari_ini = waktu_sekarang_dt.weekday()
+status_pasar = "BUKA 🟢"
+if hari_ini >= 5: # 5=Sabtu, 6=Minggu
+    status_pasar = "TUTUP (Libur Akhir Pekan) 😴"
 
 for nama_pair, simbol in pairs.items():
     ticker = yf.Ticker(simbol)
@@ -53,19 +60,33 @@ for nama_pair, simbol in pairs.items():
     harga = last_row['Close']
     rsi = last_row['RSI']
     atr = last_row['ATR']
+    sma20_harga = last_row['SMA_20']
     
     kondisi_rsi = "Normal (Aman)"
     if rsi > 70: kondisi_rsi = "OVERBOUGHT (Jenuh Beli - Hati-hati)"
     elif rsi < 30: kondisi_rsi = "OVERSOLD (Jenuh Jual - Hati-hati)"
     
+    # STRATEGI TRADER PRO (Tunggu Koreksi / Pullback)
     if "Naik" in jenis_sinyal or "BUY" in jenis_sinyal:
-        sl = harga - (1.5 * atr)
-        tp = harga + (3.0 * atr)
-        saran_posisi = "Saran Posisi: BUY 🟢"
+        if harga <= sma20_harga + (0.2 * atr): 
+            saran_posisi = "Harga sedang terkoreksi! Momen bagus BUY 🟢"
+            harga_masuk = harga
+        else:
+            saran_posisi = f"JANGAN BUY SEKARANG! Tunggu harga turun (koreksi) ke {sma20_harga:.4f} baru BUY 🟢"
+            harga_masuk = sma20_harga
+            
+        sl = harga_masuk - (1.5 * atr)
+        tp = harga_masuk + (3.0 * atr)
     else:
-        sl = harga + (1.5 * atr)
-        tp = harga - (3.0 * atr)
-        saran_posisi = "Saran Posisi: SELL 🔴"
+        if harga >= sma20_harga - (0.2 * atr):
+            saran_posisi = "Harga sedang terkoreksi naik! Momen bagus SELL 🔴"
+            harga_masuk = harga
+        else:
+            saran_posisi = f"JANGAN SELL SEKARANG! Tunggu harga naik (koreksi) ke {sma20_harga:.4f} baru SELL 🔴"
+            harga_masuk = sma20_harga
+            
+        sl = harga_masuk + (1.5 * atr)
+        tp = harga_masuk - (3.0 * atr)
 
     berita = ticker.news
     headlines = []
@@ -75,9 +96,8 @@ for nama_pair, simbol in pairs.items():
                 headlines.append(n['content']['title'])
     if not headlines:
         headlines = ["Tidak ada berita utama saat ini."]
-    berita_teks = "\n- ".join(headlines)
 
-    # PEMBUATAN GRAFIK
+    # PEMBUATAN GRAFIK CANDLESTICK
     sma20 = mpf.make_addplot(data['SMA_20'], color='blue', linestyle='--')
     sma50 = mpf.make_addplot(data['SMA_50'], color='red', linestyle='--')
     chart_filename = f'chart_{simbol.replace("=", "")}.png'
@@ -88,37 +108,38 @@ for nama_pair, simbol in pairs.items():
              ylabel='Harga', figsize=(10, 5),
              savefig=dict(fname=chart_filename, dpi=150, bbox_inches='tight'))
 
-    # AI INTERNAL (Tanpa Kunci API, Anti-Error)
-    analisa_ai = f"Halo Bosku! Berdasarkan pantauan grafik terkini, {nama_pair} sedang berada di fase **{jenis_sinyal}**. "
-    if "BUY" in saran_posisi:
-        analisa_ai += f"Kelihatannya banteng (buyer) lagi kuat nih! 🐂🚀 Posisi RSI ada di {rsi:.1f}, yang berarti {kondisi_rsi.split('(')[0].strip().lower()}. Ruang untuk naik masih terbuka lebar! 📈"
-    else:
-        analisa_ai += f"Hati-hati, beruang (seller) sedang ngamuk! 🐻🩸 Posisi RSI ada di {rsi:.1f}, statusnya {kondisi_rsi.split('(')[0].strip().lower()}. Mending ikuti arus ke bawah dan jangan paksakan buy ya! 📉"
+    # AI INTERNAL PRO VERSION
+    analisa_ai = f"Halo Bosku! {nama_pair} saat ini sedang dalam fase **{jenis_sinyal}**. "
+    if status_pasar != "BUKA 🟢":
+        analisa_ai += "\n\n⚠️ **PERHATIAN: PASAR SEDANG TUTUP/LIBUR!** Jangan membuka posisi sekarang karena rawan Gap (loncatan harga) di hari Senin pagi."
+    
+    analisa_ai += f"\n\nStrategi Pro: Trik terbaik saat ini adalah bersabar. Seperti saran di atas, jangan masuk di pucuk. Kita tunggu harga memantul di garis biru (SMA 20) sebelum eksekusi."
         
     if "Hati-hati" in kondisi_rsi:
-        analisa_ai += "\n\n⚠️ **Peringatan Ekstra:** Karena harganya sudah sangat jenuh, siap-siap waspada kalau harganya tiba-tiba putar balik!"
+        analisa_ai += f"\n\n⚠️ **Peringatan RSI:** Harga sedang dalam status {kondisi_rsi.split('(')[0].strip().lower()}. Jangan pernah melawan arus atau masuk sembarangan tanpa Stop Loss!"
         
     if headlines[0] != "Tidak ada berita utama saat ini.":
         analisa_ai += f"\n\n📰 **Kabar Pasar Hari Ini:**\nSelain grafik, perhatikan juga isu ini ya Bos:\n_{headlines[0]}_"
         
-    analisa_ai += "\n\nSelalu disiplin pakai Stop Loss sesuai rekomendasi di atas ya. Tetap cuan! 💰🤑"
+    analisa_ai += "\n\nTrader yang sabar adalah trader yang cuan! 💰🤑"
 
     # KIRIM LAPORAN KE TELEGRAM
     header = f"📊 Laporan Otomatis: {nama_pair}\n"
+    header += f"🏢 Status Pasar: {status_pasar}\n"
     header += f"⏰ Waktu: {waktu_sekarang} WIB\n"
-    header += f"🏷️ Harga: {harga:.4f}\n"
+    header += f"🏷️ Harga Saat Ini: {harga:.4f}\n"
     header += f"📈 Tren: {jenis_sinyal}\n"
     header += f"📉 RSI: {rsi:.1f} ({kondisi_rsi})\n\n"
-    header += f"🎯 {saran_posisi}\n"
-    header += f"✅ Take Profit: {tp:.4f}\n"
-    header += f"❌ Stop Loss: {sl:.4f}"
+    header += f"🎯 Saran: {saran_posisi}\n"
+    header += f"✅ Take Profit (TP): {tp:.4f}\n"
+    header += f"❌ Stop Loss (SL): {sl:.4f}"
 
     url_photo = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendPhoto"
     with open(chart_filename, 'rb') as photo:
         requests.post(url_photo, data={'chat_id': TELEGRAM_CHAT_ID, 'caption': header}, files={'photo': photo})
 
     url_msg = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
-    pesan_teks = f"💡 Analisa Cerdas:\n\n{analisa_ai}"
+    pesan_teks = f"💡 Analisa Cerdas (Mode Pro):\n\n{analisa_ai}"
     requests.post(url_msg, data={'chat_id': TELEGRAM_CHAT_ID, 'text': pesan_teks, 'parse_mode': 'Markdown'})
     
     time.sleep(3)
